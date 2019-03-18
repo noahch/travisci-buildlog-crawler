@@ -12,17 +12,21 @@ import java.util.List;
 public class Build {
     @Getter
     @Setter
-    public Long id;
+    private Long id;
 
     @Getter
     @Setter
-    public String state;
+    private String state;
 
     @Getter
     @Setter
-    public String previous_state;
+    private String previous_state;
 
     @Getter
     @Setter
-    public List<Job> jobs;
+    private List<Job> jobs;
+
+    @Getter
+    @Setter
+    private Branch branch;
 }

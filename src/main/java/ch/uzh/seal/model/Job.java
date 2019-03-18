@@ -10,18 +10,18 @@ import lombok.ToString;
 public class Job {
     @Getter
     @Setter
-    public Long id;
+    private Long id;
 
     @Getter
     @Setter
-    public String state;
+    private String state;
 
     @Getter
     @Setter
-    public Repository repository;
+    private Repository repository;
 
     @Getter
     @Setter
-    public Build build;
+    private Build build;
 
 }

@@ -8,17 +8,9 @@ import lombok.ToString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class Repository {
+public class Branch {
 
-        @Getter
-        @Setter
-        private Long id;
-
-        @Getter
-        @Setter
-        private String name;
-
-        @Getter
-        @Setter
-        private String slug;
+    @Getter
+    @Setter
+    private String name;
 }

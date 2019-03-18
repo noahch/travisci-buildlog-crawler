@@ -10,9 +10,9 @@ import lombok.ToString;
 public class Log {
     @Getter
     @Setter
-    public Long id;
+    private Long id;
 
     @Getter
     @Setter
-    public String content;
+    private String content;
 }

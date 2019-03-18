@@ -12,5 +12,5 @@ import java.util.List;
 public class Builds {
     @Getter
     @Setter
-    public List<Build> builds;
+    private List<Build> builds;
 }
