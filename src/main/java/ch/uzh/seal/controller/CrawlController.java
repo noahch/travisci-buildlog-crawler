@@ -1,7 +1,7 @@
 package ch.uzh.seal.controller;
 
-import ch.uzh.seal.client.TravisRestClient;
-import ch.uzh.seal.model.Build;
+import ch.uzh.seal.model.FailPassPair;
+import ch.uzh.seal.service.CrawlService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -9,18 +9,15 @@ import java.util.List;
 @Slf4j
 public class CrawlController {
 
-    private final TravisRestClient travisRestClient;
+    private final CrawlService crawlService;
 
     public CrawlController() {
-        travisRestClient = new TravisRestClient();
+        crawlService = new CrawlService();
     }
 
-    public void findFailPassPairs(String repositoryIdentifier) {
-        List<Build> builds = travisRestClient.getBuilds(repositoryIdentifier).getBuilds();
-        builds.stream().filter(build -> build.getState() == "failed").;
+    public void processRepository(String repositoryIdentifier) {
+       List<FailPassPair> pairs = crawlService.findFailPassPairs(repositoryIdentifier);
+       log.info(pairs.toString());
+       crawlService.processFailPassPair(pairs.get(0));
     }
-
-
-
-
 }

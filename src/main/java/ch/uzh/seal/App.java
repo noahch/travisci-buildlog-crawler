@@ -1,7 +1,7 @@
 package ch.uzh.seal;
 
-import ch.uzh.seal.client.TravisRestClient;
 import ch.uzh.seal.controller.CrawlController;
+import ch.uzh.seal.service.CrawlService;
 
 public class App {
     public static void main(String[] args) {
@@ -14,7 +14,7 @@ public class App {
 //        client.getJob("507919296");
 //        client.getLog("507919296");
         CrawlController crawlController = new CrawlController();
-        crawlController.findFailPassPairs("23734264");
+        crawlController.processRepository("23734264");
 
     }
 

@@ -29,4 +29,8 @@ public class Build {
     @Getter
     @Setter
     private Branch branch;
+
+    @Getter
+    @Setter
+    private String number;
 }
