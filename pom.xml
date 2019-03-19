@@ -7,6 +7,7 @@
     <groupId>ch.uzh.seal</groupId>
     <artifactId>travisci-buildlog-crawler</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <name>travisci-buildlog-crawler</name>
     <url>https://github.com/noahch/travisci-buildlog-crawler</url>
@@ -15,7 +16,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <slf4jVersion>1.6.1</slf4jVersion>
     </properties>
 
     <dependencies>
@@ -38,12 +38,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4jVersion}</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>${slf4jVersion}</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -55,6 +55,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jolira</groupId>
+            <artifactId>onejar-maven-plugin</artifactId>
+            <version>1.4.4</version>
         </dependency>
     </dependencies>
 
@@ -99,6 +104,18 @@
                 <plugin>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.jolira</groupId>
+                    <artifactId>onejar-maven-plugin</artifactId>
+                    <version>1.4.4</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>one-jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
