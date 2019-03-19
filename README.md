@@ -1,4 +1,4 @@
-#TRAVIS-CI BUILDLOG CRAWLER
+# TRAVIS-CI BUILDLOG CRAWLER
 The purpose of this tool is to find pairs of a failing and a succeeding passing build 
 and write their logs into a output directory. These logs are later used to create a differencing
 algorithm for a more efficient failure cause identification in build logs.
