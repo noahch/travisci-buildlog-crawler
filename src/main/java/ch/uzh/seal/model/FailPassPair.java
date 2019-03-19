@@ -17,4 +17,8 @@ public class FailPassPair {
     @Getter
     @Setter
     private Build previousPassedBuild;
+
+    public String getDirectoryString(){
+        return failedBuild.getId().toString() + "_" + previousPassedBuild.getId().toString();
+    }
 }

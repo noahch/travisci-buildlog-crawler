@@ -3,8 +3,11 @@ package ch.uzh.seal.service;
 import ch.uzh.seal.client.TravisRestClient;
 import ch.uzh.seal.model.Build;
 import ch.uzh.seal.model.FailPassPair;
+import ch.uzh.seal.utils.FileUtils;
+import ch.uzh.seal.utils.PropertyManagement;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,22 +42,15 @@ public class CrawlService {
     public void processFailPassPair(FailPassPair failPassPair){
         String failedLog = travisRestClient.getLog(failPassPair.getFailedBuild().getJobs().get(0).getId().toString()).getContent();
         String passedLog = travisRestClient.getLog(failPassPair.getPreviousPassedBuild().getJobs().get(0).getId().toString()).getContent();
+        String subDir =  failPassPair.getDirectoryString() + File.separator;
 
-
-        try {
-            FileWriter fileWriter = null;
-            fileWriter = new FileWriter("C:\\Data\\BA\\output\\failed.txt");
-            PrintWriter printWriter = new PrintWriter(fileWriter);
-            printWriter.print(failedLog);
-            printWriter.close();
-
-            fileWriter = new FileWriter("C:\\Data\\BA\\output\\passed.txt");
-            printWriter = new PrintWriter(fileWriter);
-            printWriter.print(passedLog);
-            printWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        String dir = PropertyManagement.getProperty("build_log_output_dir");
+        if (dir != null) {
+            FileUtils.writeFile(dir + subDir, "failed.txt", failedLog);
+            FileUtils.writeFile(dir + subDir, "passed.txt", passedLog);
         }
+
+
 
     }
 

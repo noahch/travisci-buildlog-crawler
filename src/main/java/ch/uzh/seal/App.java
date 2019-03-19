@@ -2,6 +2,11 @@ package ch.uzh.seal;
 
 import ch.uzh.seal.controller.CrawlController;
 import ch.uzh.seal.service.CrawlService;
+import ch.uzh.seal.utils.PropertyManagement;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class App {
     public static void main(String[] args) {
@@ -15,6 +20,7 @@ public class App {
 //        client.getLog("507919296");
         CrawlController crawlController = new CrawlController();
         crawlController.processRepository("23734264");
+
 
     }
 
