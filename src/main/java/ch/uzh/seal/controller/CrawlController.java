@@ -15,9 +15,20 @@ public class CrawlController {
         crawlService = new CrawlService();
     }
 
+    public boolean isTravisRepo(String repositoryIdentifier) {
+        return crawlService.isTravisRepo(repositoryIdentifier);
+    }
+
+    public boolean isMavenProject(String repositoryIdentifier) {
+        return crawlService.isMavenProject(repositoryIdentifier);
+    }
+
     public void processRepository(String repositoryIdentifier) {
        List<FailPassPair> pairs = crawlService.findFailPassPairs(repositoryIdentifier);
+       log.info("PROCESSING: " + repositoryIdentifier);
        log.info(pairs.toString());
-       crawlService.processFailPassPair(pairs.get(0));
+       if (!pairs.isEmpty()){
+           crawlService.processFailPassPair(pairs.get(0));
+       }
     }
 }
