@@ -2,6 +2,8 @@ package ch.uzh.seal.controller;
 
 import ch.uzh.seal.model.FailPassPair;
 import ch.uzh.seal.service.CrawlService;
+import ch.uzh.seal.utils.FileUtils;
+import ch.uzh.seal.utils.PropertyManagement;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -27,8 +29,12 @@ public class CrawlController {
        List<FailPassPair> pairs = crawlService.findFailPassPairs(repositoryIdentifier);
        log.info("PROCESSING: " + repositoryIdentifier);
        log.info(pairs.toString());
+       String dir =  PropertyManagement.getProperty("build_log_output_dir");
+        FileUtils.appendFile(dir, "processed_repos.txt", repositoryIdentifier);
        if (!pairs.isEmpty()){
-           crawlService.processFailPassPair(pairs.get(0));
+           pairs.forEach(failPassPair -> {
+               crawlService.processFailPassPair(failPassPair, repositoryIdentifier);
+           });
        }
     }
 }

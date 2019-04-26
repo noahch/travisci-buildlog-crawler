@@ -26,12 +26,35 @@ public class CrawlService {
     }
 
     public boolean isTravisRepo(String repositoryIdentifier) {
-        Repository repository = travisRestClient.getRepository(repositoryIdentifier);
-        return repository.getId() != null;
+        String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1];
+        if(FileUtils.checkIfDirectoryExists(dir)){
+            return true;
+        }else {
+            Repository repository = travisRestClient.getRepository(repositoryIdentifier);
+            if(repository.getId() ==  null) {
+                String noTravisNoMavenFile = PropertyManagement.getProperty("no_travis_no_maven");
+                String noTravisNoMavenFilePath = noTravisNoMavenFile.substring(0,noTravisNoMavenFile.lastIndexOf(File.separator)+1);
+                String noTravisNoMavenFileName = noTravisNoMavenFile.substring(noTravisNoMavenFile.lastIndexOf(File.separator)+1);
+                FileUtils.appendFile(noTravisNoMavenFilePath, noTravisNoMavenFileName, repositoryIdentifier);
+            }
+            return repository.getId() != null;
+        }
     }
 
     public boolean isMavenProject(String repositoryIdentifier) {
-        return gitRestClient.checkIfPomExists(repositoryIdentifier);
+        String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1];
+        if(FileUtils.checkIfDirectoryExists(dir)){
+            return true;
+        }else {
+            if (!gitRestClient.checkIfPomExists(repositoryIdentifier)) {
+                String noTravisNoMavenFile = PropertyManagement.getProperty("no_travis_no_maven");
+                String noTravisNoMavenFilePath = noTravisNoMavenFile.substring(0,noTravisNoMavenFile.lastIndexOf(File.separator)+1);
+                String noTravisNoMavenFileName = noTravisNoMavenFile.substring(noTravisNoMavenFile.lastIndexOf(File.separator)+1);
+                FileUtils.appendFile(noTravisNoMavenFilePath, noTravisNoMavenFileName, repositoryIdentifier);
+                return false;
+            }
+            return true;
+        }
     }
 
     public List<FailPassPair> findFailPassPairs(String repositoryIdentifier) {
@@ -47,33 +70,36 @@ public class CrawlService {
                         boolean present = builds.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().isPresent();
                         if(present){
                             Build prevPassed = builds.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().get();
-                            pairs.add(FailPassPair.builder().failedBuild(build).previousPassedBuild(prevPassed).build());
+                            FailPassPair failPassPair = FailPassPair.builder().failedBuild(build).previousPassedBuild(prevPassed).build();
+                            if (!checkIfAlreadyProcessed(failPassPair, repositoryIdentifier)){
+                                pairs.add(failPassPair);
+                            }
                         }
                     }catch (NullPointerException e) {
                         log.info("Found an element but element was null");
                     }
-                    }
-            );
+            });
         }
 
         return pairs;
     }
 
-    public void processFailPassPair(FailPassPair failPassPair){
+    public void processFailPassPair(FailPassPair failPassPair, String repositoryIdentifier){
         String failedLog = travisRestClient.getLog(failPassPair.getFailedBuild().getJobs().get(0).getId().toString()).getContent();
         String passedLog = travisRestClient.getLog(failPassPair.getPreviousPassedBuild().getJobs().get(0).getId().toString()).getContent();
         String subDir =  failPassPair.getDirectoryString() + File.separator;
 
-        String dir = PropertyManagement.getProperty("build_log_output_dir");
+        String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1] + File.separator;
         if (dir != null) {
             FileUtils.writeFile(dir + subDir, "failed.txt", failedLog);
             FileUtils.writeFile(dir + subDir, "passed.txt", passedLog);
         }
-
-
-
     }
 
-
+    private boolean checkIfAlreadyProcessed(FailPassPair failPassPair, String repositoryIdentifier) {
+        String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1] + File.separator;
+        String subDir =  failPassPair.getDirectoryString() + File.separator;
+        return FileUtils.checkIfDirectoryExists(dir + subDir);
+    }
 
 }

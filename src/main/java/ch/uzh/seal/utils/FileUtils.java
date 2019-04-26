@@ -2,10 +2,7 @@ package ch.uzh.seal.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -24,7 +21,21 @@ public class FileUtils {
             e.printStackTrace();
             log.error(String.format("File %s has not been written.", filename));
         }
+    }
 
+    public static void appendFile(String path, String filename, String content) {
+        try {
+            checkIfDirectoryExistsOrCreate(path);
+            File file = new File(path + filename);
+            FileWriter fileWriter = new FileWriter(file, true);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write(content);
+            bufferedWriter.newLine();
+            bufferedWriter.close();
+            fileWriter.close();
+        }catch (IOException e) {
+            log.error(String.format("Error appending file %s ", filename));
+        }
     }
 
     public static ArrayList<String> readFileAsList(String file) {
@@ -40,7 +51,7 @@ public class FileUtils {
             e.printStackTrace();
             log.error(String.format("File %s could not been read.", file));
         }
-        return null;
+        return new ArrayList<>();
 
     }
 
@@ -49,6 +60,11 @@ public class FileUtils {
         if (! directory.exists()){
             directory.mkdirs();
         }
+    }
+
+    public static boolean checkIfDirectoryExists(String directoryPath){
+        File directory = new File(directoryPath);
+        return directory.exists();
     }
 
 }
