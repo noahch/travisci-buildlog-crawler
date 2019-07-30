@@ -2,9 +2,7 @@ package ch.uzh.seal.service;
 
 import ch.uzh.seal.client.GitRestClient;
 import ch.uzh.seal.client.TravisRestClient;
-import ch.uzh.seal.model.Build;
-import ch.uzh.seal.model.FailPassPair;
-import ch.uzh.seal.model.Repository;
+import ch.uzh.seal.model.*;
 import ch.uzh.seal.utils.FileUtils;
 import ch.uzh.seal.utils.PropertyManagement;
 import lombok.extern.slf4j.Slf4j;
@@ -59,30 +57,90 @@ public class CrawlService {
 
     public List<FailPassPair> findFailPassPairs(String repositoryIdentifier) {
         List<FailPassPair> pairs = new ArrayList<>();
-        List<Build> builds = travisRestClient.getBuilds(repositoryIdentifier).getBuilds();
-        if (builds != null) {
-            List<Build> failedBuilds = builds.stream().filter(
-                    build -> build.getState() != null && build.getPrevious_state() != null && (build.getState().equals("failed") || build.getState().equals("errored"))
-                            && build.getPrevious_state().equals("passed")
-            ).collect(Collectors.toList());
-            failedBuilds.forEach(build -> {
+        Builds builds = travisRestClient.getBuilds(repositoryIdentifier);
+        if(builds != null) {
+            List<Build> buildList = builds.getBuilds();
+            if (buildList != null) {
+                List<Build> failedBuilds = buildList.stream().filter(
+                        build -> build.getState() != null && build.getPrevious_state() != null && (build.getState().equals("failed") || build.getState().equals("errored"))
+                                && build.getPrevious_state().equals("passed")
+                ).collect(Collectors.toList());
+                failedBuilds.forEach(build -> {
+                        try{
+                            boolean present = buildList.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().isPresent();
+                            if(present){
+                                Build prevPassed = buildList.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().get();
+                                FailPassPair failPassPair = FailPassPair.builder().failedBuild(build).previousPassedBuild(prevPassed).build();
+                                if (!checkIfAlreadyProcessed(failPassPair, repositoryIdentifier)){
+                                    pairs.add(failPassPair);
+                                }
+                            }
+                        }catch (NullPointerException e) {
+                            log.info("Found an element but element was null");
+                        } catch (Exception e){
+                            log.info("oops");
+                        }
+                });
+            }
+        }
+        return pairs;
+    }
+
+    public List<Pair> findPassPassPairs(String repositoryIdentifier) {
+        List<Pair> pairs = new ArrayList<>();
+        Builds builds = travisRestClient.getBuilds(repositoryIdentifier);
+        if(builds != null) {
+            List<Build> buildList = builds.getBuilds();
+            if (buildList != null) {
+                List<Build> failedBuilds = buildList.stream().filter(
+                        build -> build.getState() != null && build.getPrevious_state() != null && (build.getState().equals("passed") && build.getPrevious_state().equals("passed"))
+                ).collect(Collectors.toList());
+                failedBuilds.forEach(build -> {
                     try{
-                        boolean present = builds.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().isPresent();
+                        boolean present = buildList.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().isPresent();
                         if(present){
-                            Build prevPassed = builds.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().get();
-                            FailPassPair failPassPair = FailPassPair.builder().failedBuild(build).previousPassedBuild(prevPassed).build();
-                            if (!checkIfAlreadyProcessed(failPassPair, repositoryIdentifier)){
-                                pairs.add(failPassPair);
+                            Build prevPassed = buildList.stream().filter(build1 -> build.getBranch().getName().equals(build1.getBranch().getName()) && Integer.parseInt(build1.getNumber()) < Integer.parseInt(build.getNumber()) && build1.getState().equals("passed")).findFirst().get();
+                            Pair passPassPair = Pair.builder().build(build).previousBuild(prevPassed).build();
+                            // temp
+                            if (!checkIfAlreadyProcessedP(passPassPair, repositoryIdentifier) && pairs.size() < 1){
+                                pairs.add(passPassPair);
+                                // temp
+
                             }
                         }
                     }catch (NullPointerException e) {
                         log.info("Found an element but element was null");
                     }
-            });
+                });
+            }
         }
-
         return pairs;
     }
+
+    public List<Long> findSeries(String repositoryIdentifier) {
+        List<Long> series = new ArrayList<>();
+        Builds builds = travisRestClient.getBuilds(repositoryIdentifier);
+        if(builds != null) {
+            List<Build> buildList = builds.getBuilds();
+            if (buildList != null) {
+                long last = 0;
+                for(int i = 0; i < buildList.size(); i++){
+                    if(buildList.get(i).getState().equals("passed")){
+                        long curr = buildList.get(i).getJobs().get(0).getId();
+                        if((last - curr) < 9999999 || last == 0){
+                            series.add(curr);
+                            last = curr;
+                        }
+                        if(series.size() == 6){
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return series;
+    }
+
 
     public void processFailPassPair(FailPassPair failPassPair, String repositoryIdentifier){
         String failedLog = travisRestClient.getLog(failPassPair.getFailedBuild().getJobs().get(0).getId().toString()).getContent();
@@ -96,10 +154,15 @@ public class CrawlService {
         }
     }
 
-    private boolean checkIfAlreadyProcessed(FailPassPair failPassPair, String repositoryIdentifier) {
+    private boolean checkIfAlreadyProcessed(FailPassPair pair, String repositoryIdentifier) {
         String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1] + File.separator;
-        String subDir =  failPassPair.getDirectoryString() + File.separator;
+        String subDir =  pair.getDirectoryString() + File.separator;
         return FileUtils.checkIfDirectoryExists(dir + subDir);
     }
 
+    private boolean checkIfAlreadyProcessedP(Pair pair, String repositoryIdentifier) {
+        String dir = PropertyManagement.getProperty("build_log_output_dir") + repositoryIdentifier.split("/")[1] + File.separator;
+        String subDir =  pair.getDirectoryString() + File.separator;
+        return FileUtils.checkIfDirectoryExists(dir + subDir);
+    }
 }

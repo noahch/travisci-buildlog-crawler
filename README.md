@@ -14,6 +14,7 @@ Your input file should contain all the travis-ci repository slugs you want to cr
  noahch/travisci-buildlog-crawler
  exampleuser/example-repository
  ```
-Now you can run the App. 
+Now you can run the App within your IDE or from the commandline
+```java -cp target/travisci-buildlog-crawler-1.0-SNAPSHOT-jar-with-dependencies.jar ch.uzh.seal.App```
 
 

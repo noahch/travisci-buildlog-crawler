@@ -61,7 +61,9 @@ public class TravisRestClient extends AbstractUnirestClient {
         // TODO: handle paging if there are more than 20 builds
         HttpResponse<Builds> response = Unirest.get(travisApiBaseUrl + "repo/" + encodeRepositoryIdentifier(repositoryIdentifier)+ "/builds?include=build.jobs" ).asObject(Builds.class);
         Builds builds = response.getBody();
-        log.info("Builds retrieved: " + builds.toString());
+        if (builds != null) {
+            log.info("Builds retrieved: " + builds.toString());
+        }
         return builds;
     }
 

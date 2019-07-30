@@ -13,9 +13,9 @@ public class App {
         if (repositorySlugList != null) {
             CrawlController crawlController = new CrawlController();
             List<String> no_travis_no_maven_projects = FileUtils.readFileAsList(PropertyManagement.getProperty("no_travis_no_maven"));
-
-
-            repositorySlugList.stream().filter(s -> !no_travis_no_maven_projects.contains(s) && crawlController.isTravisRepo(s) && crawlController.isMavenProject(s)).forEach(crawlController::processRepository);
+//            repositorySlugList.stream().filter(s -> !no_travis_no_maven_projects.contains(s) && crawlController.isTravisRepo(s) && crawlController.isMavenProject(s)).forEach(crawlController::processRepositoryFP);
+//            repositorySlugList.stream().filter(s -> !no_travis_no_maven_projects.contains(s) && crawlController.isTravisRepo(s) && crawlController.isMavenProject(s)).forEach(crawlController::processRepositoryPP);
+            repositorySlugList.stream().filter(s -> !no_travis_no_maven_projects.contains(s) && crawlController.isTravisRepo(s) && crawlController.isMavenProject(s)).forEach(crawlController::processRepositorySeries);
         }
     }
 
